@@ -1,0 +1,1489 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(readr)
+grocery = read_csv("nanda_grocery_tract_2003-2017_01P.csv", show_col_types = FALSE)
+
+```
+
+```{r}
+grocery
+unique(grocery$LocationID)
+```
+
+```{r}
+newyork = grep("^36", grocery$tract_fips10)
+
+grocery.ny = grocery[newyork, ]
+grocery.ny
+```
+
+
+```{r}
+
+
+northcarolina = grep("^37", grocery$tract_fips10)
+grocery.nc = grocery[northcarolina, ]
+
+grocery.nc$fips = gsub("(^\\d{5}).*", "\\1", grocery.nc$tract_fips10)
+grocery.nc$fips = as.numeric(grocery.nc$fips) 
+
+
+
+
+
+years.v = c(2009, 2013, 2017)
+
+
+grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+nc.edit.data= grocery.nc.county.2017
+
+for (y in 1:3) {
+
+  grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+
+grocery.nc.2017 = subset(grocery.nc, grocery.nc$year == years.v[y] )
+grocery.nc.2017 = subset(grocery.nc.2017, grocery.nc.2017$population != 0)
+
+
+unique.nc.fips.2017 = unique(grocery.nc.2017$fips)
+
+
+ 
+
+###add every colum you will need
+#add year
+
+
+
+for (f in 1:length(unique.nc.fips.2017)) {
+  indivigualFIPS = subset(grocery.nc.2017, fips == unique.nc.fips.2017[f])
+
+  
+    grocery.nc.county.2017 = rbind(grocery.nc.county.2017, 
+          c( unique.nc.fips.2017[f], 
+             years.v[y],
+             sum(indivigualFIPS$population), 
+             sum(indivigualFIPS$aland10), 
+             sum(indivigualFIPS$count_445110),
+             sum(indivigualFIPS$count_sales_445110),
+             sum(indivigualFIPS$count_emp_445110),
+             (sum(indivigualFIPS$count_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_445110)*1000)/sum(indivigualFIPS$population),
+             
+            
+             (sum(indivigualFIPS$count_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_445110))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_4452),
+             sum(indivigualFIPS$count_sales_4452),
+             sum(indivigualFIPS$count_emp_4452),
+             (sum(indivigualFIPS$count_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_4452))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_452311),
+             sum(indivigualFIPS$count_sales_452311),
+             sum(indivigualFIPS$count_emp_452311),
+             (sum(indivigualFIPS$count_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_452311))/sum(indivigualFIPS$aland10)
+
+             ))
+}
+
+
+
+
+names(grocery.nc.county.2017)[1] = "fips"
+names(grocery.nc.county.2017)[2] = "Year"
+names(grocery.nc.county.2017)[3] = "Population"
+names(grocery.nc.county.2017)[4] = "Sq Miles"
+names(grocery.nc.county.2017)[5] = "Count.B"
+names(grocery.nc.county.2017)[6] = "Count.B.Sales"
+names(grocery.nc.county.2017)[7] = "Count.B.Emp"
+names(grocery.nc.county.2017)[8] = "PopDen.B"
+names(grocery.nc.county.2017)[9] = "PopDen.B.Sales"
+names(grocery.nc.county.2017)[10] = "PopDen.B.Emp"
+names(grocery.nc.county.2017)[11] = "LandDen.B"
+names(grocery.nc.county.2017)[12] = "LandDen.B.Sales"
+names(grocery.nc.county.2017)[13] = "LandDen.B.Emp"
+names(grocery.nc.county.2017)[14] = "Count.S"
+names(grocery.nc.county.2017)[15] = "Count.S.Sales"
+names(grocery.nc.county.2017)[16] = "Count.S.Emp"
+names(grocery.nc.county.2017)[17] = "PopDen.S"
+names(grocery.nc.county.2017)[18] = "PopDen.S.Sales"
+names(grocery.nc.county.2017)[19] = "PopDen.S.Emp"
+names(grocery.nc.county.2017)[20] = "LandDen.S"
+names(grocery.nc.county.2017)[21] = "LandDen.S.Sales"
+names(grocery.nc.county.2017)[22] = "LandDen.S.Emp"
+names(grocery.nc.county.2017)[23] = "Count.W"
+names(grocery.nc.county.2017)[24] = "Count.W.Sales"
+names(grocery.nc.county.2017)[25] = "Count.w.Emp"
+names(grocery.nc.county.2017)[26] = "PopDen.W"
+names(grocery.nc.county.2017)[27] = "PopDen.W.Sales"
+names(grocery.nc.county.2017)[28] = "PopDen.W.Emp"
+names(grocery.nc.county.2017)[29] = "LandDen.W"
+names(grocery.nc.county.2017)[30] = "LandDen.W.Sales"
+names(grocery.nc.county.2017)[31] = "LandDen.W.Emp"
+
+names(nc.edit.data)[1] = "fips"
+names(nc.edit.data)[2] = "Year"
+names(nc.edit.data)[3] = "Population"
+names(nc.edit.data)[4] = "Sq Miles"
+names(nc.edit.data)[5] = "Count.B"
+names(nc.edit.data)[6] = "Count.B.Sales"
+names(nc.edit.data)[7] = "Count.B.Emp"
+names(nc.edit.data)[8] = "PopDen.B"
+names(nc.edit.data)[9] = "PopDen.B.Sales"
+names(nc.edit.data)[10] = "PopDen.B.Emp"
+names(nc.edit.data)[11] = "LandDen.B"
+names(nc.edit.data)[12] = "LandDen.B.Sales"
+names(nc.edit.data)[13] = "LandDen.B.Emp"
+names(nc.edit.data)[14] = "Count.S"
+names(nc.edit.data)[15] = "Count.S.Sales"
+names(nc.edit.data)[16] = "Count.S.Emp"
+names(nc.edit.data)[17] = "PopDen.S"
+names(nc.edit.data)[18] = "PopDen.S.Sales"
+names(nc.edit.data)[19] = "PopDen.S.Emp"
+names(nc.edit.data)[20] = "LandDen.S"
+names(nc.edit.data)[21] = "LandDen.S.Sales"
+names(nc.edit.data)[22] = "LandDen.S.Emp"
+names(nc.edit.data)[23] = "Count.W"
+names(nc.edit.data)[24] = "Count.W.Sales"
+names(nc.edit.data)[25] = "Count.w.Emp"
+names(nc.edit.data)[26] = "PopDen.W"
+names(nc.edit.data)[27] = "PopDen.W.Sales"
+names(nc.edit.data)[28] = "PopDen.W.Emp"
+names(nc.edit.data)[29] = "LandDen.W"
+names(nc.edit.data)[30] = "LandDen.W.Sales"
+names(nc.edit.data)[31] = "LandDen.W.Emp"
+
+
+nc.edit.data = rbind(nc.edit.data, grocery.nc.county.2017)
+
+
+}
+nc.edit.data
+
+```
+
+
+
+
+```{r}
+#for new york
+northcarolina = grep("^36", grocery$tract_fips10)
+grocery.nc = grocery[northcarolina, ]
+
+grocery.nc$fips = gsub("(^\\d{5}).*", "\\1", grocery.nc$tract_fips10)
+grocery.nc$fips = as.numeric(grocery.nc$fips) 
+
+
+
+
+
+years.v = c(2009, 2013, 2017)
+
+
+grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+ny.edit.data= grocery.nc.county.2017
+
+for (y in 1:3) {
+
+  grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+
+grocery.nc.2017 = subset(grocery.nc, grocery.nc$year == years.v[y] )
+grocery.nc.2017 = subset(grocery.nc.2017, grocery.nc.2017$population != 0)
+
+
+unique.nc.fips.2017 = unique(grocery.nc.2017$fips)
+
+
+ 
+
+###add every colum you will need
+#add year
+
+
+
+for (f in 1:length(unique.nc.fips.2017)) {
+  indivigualFIPS = subset(grocery.nc.2017, fips == unique.nc.fips.2017[f])
+
+  
+    grocery.nc.county.2017 = rbind(grocery.nc.county.2017, 
+          c( unique.nc.fips.2017[f], 
+             years.v[y],
+             sum(indivigualFIPS$population), 
+             sum(indivigualFIPS$aland10), 
+             sum(indivigualFIPS$count_445110),
+             sum(indivigualFIPS$count_sales_445110),
+             sum(indivigualFIPS$count_emp_445110),
+             (sum(indivigualFIPS$count_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_445110)*1000)/sum(indivigualFIPS$population),
+             
+            
+             (sum(indivigualFIPS$count_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_445110))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_4452),
+             sum(indivigualFIPS$count_sales_4452),
+             sum(indivigualFIPS$count_emp_4452),
+             (sum(indivigualFIPS$count_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_4452))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_452311),
+             sum(indivigualFIPS$count_sales_452311),
+             sum(indivigualFIPS$count_emp_452311),
+             (sum(indivigualFIPS$count_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_452311))/sum(indivigualFIPS$aland10)
+
+             ))
+}
+
+
+
+
+names(grocery.nc.county.2017)[1] = "fips"
+names(grocery.nc.county.2017)[2] = "Year"
+names(grocery.nc.county.2017)[3] = "Population"
+names(grocery.nc.county.2017)[4] = "Sq Miles"
+names(grocery.nc.county.2017)[5] = "Count.B"
+names(grocery.nc.county.2017)[6] = "Count.B.Sales"
+names(grocery.nc.county.2017)[7] = "Count.B.Emp"
+names(grocery.nc.county.2017)[8] = "PopDen.B"
+names(grocery.nc.county.2017)[9] = "PopDen.B.Sales"
+names(grocery.nc.county.2017)[10] = "PopDen.B.Emp"
+names(grocery.nc.county.2017)[11] = "LandDen.B"
+names(grocery.nc.county.2017)[12] = "LandDen.B.Sales"
+names(grocery.nc.county.2017)[13] = "LandDen.B.Emp"
+names(grocery.nc.county.2017)[14] = "Count.S"
+names(grocery.nc.county.2017)[15] = "Count.S.Sales"
+names(grocery.nc.county.2017)[16] = "Count.S.Emp"
+names(grocery.nc.county.2017)[17] = "PopDen.S"
+names(grocery.nc.county.2017)[18] = "PopDen.S.Sales"
+names(grocery.nc.county.2017)[19] = "PopDen.S.Emp"
+names(grocery.nc.county.2017)[20] = "LandDen.S"
+names(grocery.nc.county.2017)[21] = "LandDen.S.Sales"
+names(grocery.nc.county.2017)[22] = "LandDen.S.Emp"
+names(grocery.nc.county.2017)[23] = "Count.W"
+names(grocery.nc.county.2017)[24] = "Count.W.Sales"
+names(grocery.nc.county.2017)[25] = "Count.w.Emp"
+names(grocery.nc.county.2017)[26] = "PopDen.W"
+names(grocery.nc.county.2017)[27] = "PopDen.W.Sales"
+names(grocery.nc.county.2017)[28] = "PopDen.W.Emp"
+names(grocery.nc.county.2017)[29] = "LandDen.W"
+names(grocery.nc.county.2017)[30] = "LandDen.W.Sales"
+names(grocery.nc.county.2017)[31] = "LandDen.W.Emp"
+
+names(ny.edit.data)[1] = "fips"
+names(ny.edit.data)[2] = "Year"
+names(ny.edit.data)[3] = "Population"
+names(ny.edit.data)[4] = "Sq Miles"
+names(ny.edit.data)[5] = "Count.B"
+names(ny.edit.data)[6] = "Count.B.Sales"
+names(ny.edit.data)[7] = "Count.B.Emp"
+names(ny.edit.data)[8] = "PopDen.B"
+names(ny.edit.data)[9] = "PopDen.B.Sales"
+names(ny.edit.data)[10] = "PopDen.B.Emp"
+names(ny.edit.data)[11] = "LandDen.B"
+names(ny.edit.data)[12] = "LandDen.B.Sales"
+names(ny.edit.data)[13] = "LandDen.B.Emp"
+names(ny.edit.data)[14] = "Count.S"
+names(ny.edit.data)[15] = "Count.S.Sales"
+names(ny.edit.data)[16] = "Count.S.Emp"
+names(ny.edit.data)[17] = "PopDen.S"
+names(ny.edit.data)[18] = "PopDen.S.Sales"
+names(ny.edit.data)[19] = "PopDen.S.Emp"
+names(ny.edit.data)[20] = "LandDen.S"
+names(ny.edit.data)[21] = "LandDen.S.Sales"
+names(ny.edit.data)[22] = "LandDen.S.Emp"
+names(ny.edit.data)[23] = "Count.W"
+names(ny.edit.data)[24] = "Count.W.Sales"
+names(ny.edit.data)[25] = "Count.w.Emp"
+names(ny.edit.data)[26] = "PopDen.W"
+names(ny.edit.data)[27] = "PopDen.W.Sales"
+names(ny.edit.data)[28] = "PopDen.W.Emp"
+names(ny.edit.data)[29] = "LandDen.W"
+names(ny.edit.data)[30] = "LandDen.W.Sales"
+names(ny.edit.data)[31] = "LandDen.W.Emp"
+
+
+ny.edit.data = rbind(ny.edit.data, grocery.nc.county.2017)
+
+
+}
+ny.edit.data
+```
+
+```{r}
+###MISSISSIPPI
+northcarolina = grep("^28", grocery$tract_fips10)
+grocery.nc = grocery[northcarolina, ]
+
+grocery.nc$fips = gsub("(^\\d{5}).*", "\\1", grocery.nc$tract_fips10)
+grocery.nc$fips = as.numeric(grocery.nc$fips) 
+
+
+
+
+
+years.v = c(2009, 2013, 2017)
+
+
+grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+miss.edit.data= grocery.nc.county.2017
+
+for (y in 1:3) {
+
+  grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+
+grocery.nc.2017 = subset(grocery.nc, grocery.nc$year == years.v[y] )
+grocery.nc.2017 = subset(grocery.nc.2017, grocery.nc.2017$population != 0)
+
+
+unique.nc.fips.2017 = unique(grocery.nc.2017$fips)
+
+
+ 
+
+###add every colum you will need
+#add year
+
+
+
+for (f in 1:length(unique.nc.fips.2017)) {
+  indivigualFIPS = subset(grocery.nc.2017, fips == unique.nc.fips.2017[f])
+
+  
+    grocery.nc.county.2017 = rbind(grocery.nc.county.2017, 
+          c( unique.nc.fips.2017[f], 
+             years.v[y],
+             sum(indivigualFIPS$population), 
+             sum(indivigualFIPS$aland10), 
+             sum(indivigualFIPS$count_445110),
+             sum(indivigualFIPS$count_sales_445110),
+             sum(indivigualFIPS$count_emp_445110),
+             (sum(indivigualFIPS$count_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_445110)*1000)/sum(indivigualFIPS$population),
+             
+            
+             (sum(indivigualFIPS$count_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_445110))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_4452),
+             sum(indivigualFIPS$count_sales_4452),
+             sum(indivigualFIPS$count_emp_4452),
+             (sum(indivigualFIPS$count_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_4452))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_452311),
+             sum(indivigualFIPS$count_sales_452311),
+             sum(indivigualFIPS$count_emp_452311),
+             (sum(indivigualFIPS$count_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_452311))/sum(indivigualFIPS$aland10)
+
+             ))
+}
+
+
+
+
+names(grocery.nc.county.2017)[1] = "fips"
+names(grocery.nc.county.2017)[2] = "Year"
+names(grocery.nc.county.2017)[3] = "Population"
+names(grocery.nc.county.2017)[4] = "Sq Miles"
+names(grocery.nc.county.2017)[5] = "Count.B"
+names(grocery.nc.county.2017)[6] = "Count.B.Sales"
+names(grocery.nc.county.2017)[7] = "Count.B.Emp"
+names(grocery.nc.county.2017)[8] = "PopDen.B"
+names(grocery.nc.county.2017)[9] = "PopDen.B.Sales"
+names(grocery.nc.county.2017)[10] = "PopDen.B.Emp"
+names(grocery.nc.county.2017)[11] = "LandDen.B"
+names(grocery.nc.county.2017)[12] = "LandDen.B.Sales"
+names(grocery.nc.county.2017)[13] = "LandDen.B.Emp"
+names(grocery.nc.county.2017)[14] = "Count.S"
+names(grocery.nc.county.2017)[15] = "Count.S.Sales"
+names(grocery.nc.county.2017)[16] = "Count.S.Emp"
+names(grocery.nc.county.2017)[17] = "PopDen.S"
+names(grocery.nc.county.2017)[18] = "PopDen.S.Sales"
+names(grocery.nc.county.2017)[19] = "PopDen.S.Emp"
+names(grocery.nc.county.2017)[20] = "LandDen.S"
+names(grocery.nc.county.2017)[21] = "LandDen.S.Sales"
+names(grocery.nc.county.2017)[22] = "LandDen.S.Emp"
+names(grocery.nc.county.2017)[23] = "Count.W"
+names(grocery.nc.county.2017)[24] = "Count.W.Sales"
+names(grocery.nc.county.2017)[25] = "Count.w.Emp"
+names(grocery.nc.county.2017)[26] = "PopDen.W"
+names(grocery.nc.county.2017)[27] = "PopDen.W.Sales"
+names(grocery.nc.county.2017)[28] = "PopDen.W.Emp"
+names(grocery.nc.county.2017)[29] = "LandDen.W"
+names(grocery.nc.county.2017)[30] = "LandDen.W.Sales"
+names(grocery.nc.county.2017)[31] = "LandDen.W.Emp"
+
+names(miss.edit.data)[1] = "fips"
+names(miss.edit.data)[2] = "Year"
+names(miss.edit.data)[3] = "Population"
+names(miss.edit.data)[4] = "Sq Miles"
+names(miss.edit.data)[5] = "Count.B"
+names(miss.edit.data)[6] = "Count.B.Sales"
+names(miss.edit.data)[7] = "Count.B.Emp"
+names(miss.edit.data)[8] = "PopDen.B"
+names(miss.edit.data)[9] = "PopDen.B.Sales"
+names(miss.edit.data)[10] = "PopDen.B.Emp"
+names(miss.edit.data)[11] = "LandDen.B"
+names(miss.edit.data)[12] = "LandDen.B.Sales"
+names(miss.edit.data)[13] = "LandDen.B.Emp"
+names(miss.edit.data)[14] = "Count.S"
+names(miss.edit.data)[15] = "Count.S.Sales"
+names(miss.edit.data)[16] = "Count.S.Emp"
+names(miss.edit.data)[17] = "PopDen.S"
+names(miss.edit.data)[18] = "PopDen.S.Sales"
+names(miss.edit.data)[19] = "PopDen.S.Emp"
+names(miss.edit.data)[20] = "LandDen.S"
+names(miss.edit.data)[21] = "LandDen.S.Sales"
+names(miss.edit.data)[22] = "LandDen.S.Emp"
+names(miss.edit.data)[23] = "Count.W"
+names(miss.edit.data)[24] = "Count.W.Sales"
+names(miss.edit.data)[25] = "Count.w.Emp"
+names(miss.edit.data)[26] = "PopDen.W"
+names(miss.edit.data)[27] = "PopDen.W.Sales"
+names(miss.edit.data)[28] = "PopDen.W.Emp"
+names(miss.edit.data)[29] = "LandDen.W"
+names(miss.edit.data)[30] = "LandDen.W.Sales"
+names(miss.edit.data)[31] = "LandDen.W.Emp"
+
+
+miss.edit.data = rbind(miss.edit.data, grocery.nc.county.2017)
+
+
+}
+miss.edit.data
+```
+
+
+```{r}
+###montana
+northcarolina = grep("^30", grocery$tract_fips10)
+grocery.nc = grocery[northcarolina, ]
+
+grocery.nc$fips = gsub("(^\\d{5}).*", "\\1", grocery.nc$tract_fips10)
+grocery.nc$fips = as.numeric(grocery.nc$fips) 
+
+
+
+
+
+years.v = c(2009, 2013, 2017)
+
+
+grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+mont.edit.data= grocery.nc.county.2017
+
+for (y in 1:3) {
+
+  grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+
+grocery.nc.2017 = subset(grocery.nc, grocery.nc$year == years.v[y] )
+grocery.nc.2017 = subset(grocery.nc.2017, grocery.nc.2017$population != 0)
+
+
+unique.nc.fips.2017 = unique(grocery.nc.2017$fips)
+
+
+ 
+
+###add every colum you will need
+#add year
+
+
+
+for (f in 1:length(unique.nc.fips.2017)) {
+  indivigualFIPS = subset(grocery.nc.2017, fips == unique.nc.fips.2017[f])
+
+  
+    grocery.nc.county.2017 = rbind(grocery.nc.county.2017, 
+          c( unique.nc.fips.2017[f], 
+             years.v[y],
+             sum(indivigualFIPS$population), 
+             sum(indivigualFIPS$aland10), 
+             sum(indivigualFIPS$count_445110),
+             sum(indivigualFIPS$count_sales_445110),
+             sum(indivigualFIPS$count_emp_445110),
+             (sum(indivigualFIPS$count_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_445110)*1000)/sum(indivigualFIPS$population),
+             
+            
+             (sum(indivigualFIPS$count_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_445110))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_4452),
+             sum(indivigualFIPS$count_sales_4452),
+             sum(indivigualFIPS$count_emp_4452),
+             (sum(indivigualFIPS$count_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_4452))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_452311),
+             sum(indivigualFIPS$count_sales_452311),
+             sum(indivigualFIPS$count_emp_452311),
+             (sum(indivigualFIPS$count_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_452311))/sum(indivigualFIPS$aland10)
+
+             ))
+}
+
+
+
+
+names(grocery.nc.county.2017)[1] = "fips"
+names(grocery.nc.county.2017)[2] = "Year"
+names(grocery.nc.county.2017)[3] = "Population"
+names(grocery.nc.county.2017)[4] = "Sq Miles"
+names(grocery.nc.county.2017)[5] = "Count.B"
+names(grocery.nc.county.2017)[6] = "Count.B.Sales"
+names(grocery.nc.county.2017)[7] = "Count.B.Emp"
+names(grocery.nc.county.2017)[8] = "PopDen.B"
+names(grocery.nc.county.2017)[9] = "PopDen.B.Sales"
+names(grocery.nc.county.2017)[10] = "PopDen.B.Emp"
+names(grocery.nc.county.2017)[11] = "LandDen.B"
+names(grocery.nc.county.2017)[12] = "LandDen.B.Sales"
+names(grocery.nc.county.2017)[13] = "LandDen.B.Emp"
+names(grocery.nc.county.2017)[14] = "Count.S"
+names(grocery.nc.county.2017)[15] = "Count.S.Sales"
+names(grocery.nc.county.2017)[16] = "Count.S.Emp"
+names(grocery.nc.county.2017)[17] = "PopDen.S"
+names(grocery.nc.county.2017)[18] = "PopDen.S.Sales"
+names(grocery.nc.county.2017)[19] = "PopDen.S.Emp"
+names(grocery.nc.county.2017)[20] = "LandDen.S"
+names(grocery.nc.county.2017)[21] = "LandDen.S.Sales"
+names(grocery.nc.county.2017)[22] = "LandDen.S.Emp"
+names(grocery.nc.county.2017)[23] = "Count.W"
+names(grocery.nc.county.2017)[24] = "Count.W.Sales"
+names(grocery.nc.county.2017)[25] = "Count.w.Emp"
+names(grocery.nc.county.2017)[26] = "PopDen.W"
+names(grocery.nc.county.2017)[27] = "PopDen.W.Sales"
+names(grocery.nc.county.2017)[28] = "PopDen.W.Emp"
+names(grocery.nc.county.2017)[29] = "LandDen.W"
+names(grocery.nc.county.2017)[30] = "LandDen.W.Sales"
+names(grocery.nc.county.2017)[31] = "LandDen.W.Emp"
+
+names(mont.edit.data)[1] = "fips"
+names(mont.edit.data)[2] = "Year"
+names(mont.edit.data)[3] = "Population"
+names(mont.edit.data)[4] = "Sq Miles"
+names(mont.edit.data)[5] = "Count.B"
+names(mont.edit.data)[6] = "Count.B.Sales"
+names(mont.edit.data)[7] = "Count.B.Emp"
+names(mont.edit.data)[8] = "PopDen.B"
+names(mont.edit.data)[9] = "PopDen.B.Sales"
+names(mont.edit.data)[10] = "PopDen.B.Emp"
+names(mont.edit.data)[11] = "LandDen.B"
+names(mont.edit.data)[12] = "LandDen.B.Sales"
+names(mont.edit.data)[13] = "LandDen.B.Emp"
+names(mont.edit.data)[14] = "Count.S"
+names(mont.edit.data)[15] = "Count.S.Sales"
+names(mont.edit.data)[16] = "Count.S.Emp"
+names(mont.edit.data)[17] = "PopDen.S"
+names(mont.edit.data)[18] = "PopDen.S.Sales"
+names(mont.edit.data)[19] = "PopDen.S.Emp"
+names(mont.edit.data)[20] = "LandDen.S"
+names(mont.edit.data)[21] = "LandDen.S.Sales"
+names(mont.edit.data)[22] = "LandDen.S.Emp"
+names(mont.edit.data)[23] = "Count.W"
+names(mont.edit.data)[24] = "Count.W.Sales"
+names(mont.edit.data)[25] = "Count.w.Emp"
+names(mont.edit.data)[26] = "PopDen.W"
+names(mont.edit.data)[27] = "PopDen.W.Sales"
+names(mont.edit.data)[28] = "PopDen.W.Emp"
+names(mont.edit.data)[29] = "LandDen.W"
+names(mont.edit.data)[30] = "LandDen.W.Sales"
+names(mont.edit.data)[31] = "LandDen.W.Emp"
+
+
+mont.edit.data = rbind(mont.edit.data, grocery.nc.county.2017)
+
+
+}
+mont.edit.data
+```
+
+
+
+
+
+
+```{r}
+###west virgina
+northcarolina = grep("^54", grocery$tract_fips10)
+grocery.nc = grocery[northcarolina, ]
+
+grocery.nc$fips = gsub("(^\\d{5}).*", "\\1", grocery.nc$tract_fips10)
+grocery.nc$fips = as.numeric(grocery.nc$fips) 
+
+
+
+
+
+years.v = c(2009, 2013, 2017)
+
+
+grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+wv.edit.data= grocery.nc.county.2017
+
+for (y in 1:3) {
+
+  grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+
+grocery.nc.2017 = subset(grocery.nc, grocery.nc$year == years.v[y] )
+grocery.nc.2017 = subset(grocery.nc.2017, grocery.nc.2017$population != 0)
+
+
+unique.nc.fips.2017 = unique(grocery.nc.2017$fips)
+
+
+ 
+
+###add every colum you will need
+#add year
+
+
+
+for (f in 1:length(unique.nc.fips.2017)) {
+  indivigualFIPS = subset(grocery.nc.2017, fips == unique.nc.fips.2017[f])
+
+  
+    grocery.nc.county.2017 = rbind(grocery.nc.county.2017, 
+          c( unique.nc.fips.2017[f], 
+             years.v[y],
+             sum(indivigualFIPS$population), 
+             sum(indivigualFIPS$aland10), 
+             sum(indivigualFIPS$count_445110),
+             sum(indivigualFIPS$count_sales_445110),
+             sum(indivigualFIPS$count_emp_445110),
+             (sum(indivigualFIPS$count_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_445110)*1000)/sum(indivigualFIPS$population),
+             
+            
+             (sum(indivigualFIPS$count_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_445110))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_4452),
+             sum(indivigualFIPS$count_sales_4452),
+             sum(indivigualFIPS$count_emp_4452),
+             (sum(indivigualFIPS$count_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_4452))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_452311),
+             sum(indivigualFIPS$count_sales_452311),
+             sum(indivigualFIPS$count_emp_452311),
+             (sum(indivigualFIPS$count_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_452311))/sum(indivigualFIPS$aland10)
+
+             ))
+}
+
+
+
+
+names(grocery.nc.county.2017)[1] = "fips"
+names(grocery.nc.county.2017)[2] = "Year"
+names(grocery.nc.county.2017)[3] = "Population"
+names(grocery.nc.county.2017)[4] = "Sq Miles"
+names(grocery.nc.county.2017)[5] = "Count.B"
+names(grocery.nc.county.2017)[6] = "Count.B.Sales"
+names(grocery.nc.county.2017)[7] = "Count.B.Emp"
+names(grocery.nc.county.2017)[8] = "PopDen.B"
+names(grocery.nc.county.2017)[9] = "PopDen.B.Sales"
+names(grocery.nc.county.2017)[10] = "PopDen.B.Emp"
+names(grocery.nc.county.2017)[11] = "LandDen.B"
+names(grocery.nc.county.2017)[12] = "LandDen.B.Sales"
+names(grocery.nc.county.2017)[13] = "LandDen.B.Emp"
+names(grocery.nc.county.2017)[14] = "Count.S"
+names(grocery.nc.county.2017)[15] = "Count.S.Sales"
+names(grocery.nc.county.2017)[16] = "Count.S.Emp"
+names(grocery.nc.county.2017)[17] = "PopDen.S"
+names(grocery.nc.county.2017)[18] = "PopDen.S.Sales"
+names(grocery.nc.county.2017)[19] = "PopDen.S.Emp"
+names(grocery.nc.county.2017)[20] = "LandDen.S"
+names(grocery.nc.county.2017)[21] = "LandDen.S.Sales"
+names(grocery.nc.county.2017)[22] = "LandDen.S.Emp"
+names(grocery.nc.county.2017)[23] = "Count.W"
+names(grocery.nc.county.2017)[24] = "Count.W.Sales"
+names(grocery.nc.county.2017)[25] = "Count.w.Emp"
+names(grocery.nc.county.2017)[26] = "PopDen.W"
+names(grocery.nc.county.2017)[27] = "PopDen.W.Sales"
+names(grocery.nc.county.2017)[28] = "PopDen.W.Emp"
+names(grocery.nc.county.2017)[29] = "LandDen.W"
+names(grocery.nc.county.2017)[30] = "LandDen.W.Sales"
+names(grocery.nc.county.2017)[31] = "LandDen.W.Emp"
+
+names(wv.edit.data)[1] = "fips"
+names(wv.edit.data)[2] = "Year"
+names(wv.edit.data)[3] = "Population"
+names(wv.edit.data)[4] = "Sq Miles"
+names(wv.edit.data)[5] = "Count.B"
+names(wv.edit.data)[6] = "Count.B.Sales"
+names(wv.edit.data)[7] = "Count.B.Emp"
+names(wv.edit.data)[8] = "PopDen.B"
+names(wv.edit.data)[9] = "PopDen.B.Sales"
+names(wv.edit.data)[10] = "PopDen.B.Emp"
+names(wv.edit.data)[11] = "LandDen.B"
+names(wv.edit.data)[12] = "LandDen.B.Sales"
+names(wv.edit.data)[13] = "LandDen.B.Emp"
+names(wv.edit.data)[14] = "Count.S"
+names(wv.edit.data)[15] = "Count.S.Sales"
+names(wv.edit.data)[16] = "Count.S.Emp"
+names(wv.edit.data)[17] = "PopDen.S"
+names(wv.edit.data)[18] = "PopDen.S.Sales"
+names(wv.edit.data)[19] = "PopDen.S.Emp"
+names(wv.edit.data)[20] = "LandDen.S"
+names(wv.edit.data)[21] = "LandDen.S.Sales"
+names(wv.edit.data)[22] = "LandDen.S.Emp"
+names(wv.edit.data)[23] = "Count.W"
+names(wv.edit.data)[24] = "Count.W.Sales"
+names(wv.edit.data)[25] = "Count.w.Emp"
+names(wv.edit.data)[26] = "PopDen.W"
+names(wv.edit.data)[27] = "PopDen.W.Sales"
+names(wv.edit.data)[28] = "PopDen.W.Emp"
+names(wv.edit.data)[29] = "LandDen.W"
+names(wv.edit.data)[30] = "LandDen.W.Sales"
+names(wv.edit.data)[31] = "LandDen.W.Emp"
+
+
+wv.edit.data = rbind(wv.edit.data, grocery.nc.county.2017)
+
+
+}
+wv.edit.data
+```
+
+
+
+
+
+
+
+
+```{r}
+###oregon
+northcarolina = grep("^41", grocery$tract_fips10)
+grocery.nc = grocery[northcarolina, ]
+
+grocery.nc$fips = gsub("(^\\d{5}).*", "\\1", grocery.nc$tract_fips10)
+grocery.nc$fips = as.numeric(grocery.nc$fips) 
+
+
+
+
+
+years.v = c(2009, 2013, 2017)
+
+
+grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+oregon.edit.data= grocery.nc.county.2017
+
+for (y in 1:3) {
+
+  grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+
+grocery.nc.2017 = subset(grocery.nc, grocery.nc$year == years.v[y] )
+grocery.nc.2017 = subset(grocery.nc.2017, grocery.nc.2017$population != 0)
+
+
+unique.nc.fips.2017 = unique(grocery.nc.2017$fips)
+
+
+ 
+
+###add every colum you will need
+#add year
+
+
+
+for (f in 1:length(unique.nc.fips.2017)) {
+  indivigualFIPS = subset(grocery.nc.2017, fips == unique.nc.fips.2017[f])
+
+  
+    grocery.nc.county.2017 = rbind(grocery.nc.county.2017, 
+          c( unique.nc.fips.2017[f], 
+             years.v[y],
+             sum(indivigualFIPS$population), 
+             sum(indivigualFIPS$aland10), 
+             sum(indivigualFIPS$count_445110),
+             sum(indivigualFIPS$count_sales_445110),
+             sum(indivigualFIPS$count_emp_445110),
+             (sum(indivigualFIPS$count_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_445110)*1000)/sum(indivigualFIPS$population),
+             
+            
+             (sum(indivigualFIPS$count_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_445110))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_4452),
+             sum(indivigualFIPS$count_sales_4452),
+             sum(indivigualFIPS$count_emp_4452),
+             (sum(indivigualFIPS$count_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_4452))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_452311),
+             sum(indivigualFIPS$count_sales_452311),
+             sum(indivigualFIPS$count_emp_452311),
+             (sum(indivigualFIPS$count_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_452311))/sum(indivigualFIPS$aland10)
+
+             ))
+}
+
+
+
+
+names(grocery.nc.county.2017)[1] = "fips"
+names(grocery.nc.county.2017)[2] = "Year"
+names(grocery.nc.county.2017)[3] = "Population"
+names(grocery.nc.county.2017)[4] = "Sq Miles"
+names(grocery.nc.county.2017)[5] = "Count.B"
+names(grocery.nc.county.2017)[6] = "Count.B.Sales"
+names(grocery.nc.county.2017)[7] = "Count.B.Emp"
+names(grocery.nc.county.2017)[8] = "PopDen.B"
+names(grocery.nc.county.2017)[9] = "PopDen.B.Sales"
+names(grocery.nc.county.2017)[10] = "PopDen.B.Emp"
+names(grocery.nc.county.2017)[11] = "LandDen.B"
+names(grocery.nc.county.2017)[12] = "LandDen.B.Sales"
+names(grocery.nc.county.2017)[13] = "LandDen.B.Emp"
+names(grocery.nc.county.2017)[14] = "Count.S"
+names(grocery.nc.county.2017)[15] = "Count.S.Sales"
+names(grocery.nc.county.2017)[16] = "Count.S.Emp"
+names(grocery.nc.county.2017)[17] = "PopDen.S"
+names(grocery.nc.county.2017)[18] = "PopDen.S.Sales"
+names(grocery.nc.county.2017)[19] = "PopDen.S.Emp"
+names(grocery.nc.county.2017)[20] = "LandDen.S"
+names(grocery.nc.county.2017)[21] = "LandDen.S.Sales"
+names(grocery.nc.county.2017)[22] = "LandDen.S.Emp"
+names(grocery.nc.county.2017)[23] = "Count.W"
+names(grocery.nc.county.2017)[24] = "Count.W.Sales"
+names(grocery.nc.county.2017)[25] = "Count.w.Emp"
+names(grocery.nc.county.2017)[26] = "PopDen.W"
+names(grocery.nc.county.2017)[27] = "PopDen.W.Sales"
+names(grocery.nc.county.2017)[28] = "PopDen.W.Emp"
+names(grocery.nc.county.2017)[29] = "LandDen.W"
+names(grocery.nc.county.2017)[30] = "LandDen.W.Sales"
+names(grocery.nc.county.2017)[31] = "LandDen.W.Emp"
+
+names(oregon.edit.data)[1] = "fips"
+names(oregon.edit.data)[2] = "Year"
+names(oregon.edit.data)[3] = "Population"
+names(oregon.edit.data)[4] = "Sq Miles"
+names(oregon.edit.data)[5] = "Count.B"
+names(oregon.edit.data)[6] = "Count.B.Sales"
+names(oregon.edit.data)[7] = "Count.B.Emp"
+names(oregon.edit.data)[8] = "PopDen.B"
+names(oregon.edit.data)[9] = "PopDen.B.Sales"
+names(oregon.edit.data)[10] = "PopDen.B.Emp"
+names(oregon.edit.data)[11] = "LandDen.B"
+names(oregon.edit.data)[12] = "LandDen.B.Sales"
+names(oregon.edit.data)[13] = "LandDen.B.Emp"
+names(oregon.edit.data)[14] = "Count.S"
+names(oregon.edit.data)[15] = "Count.S.Sales"
+names(oregon.edit.data)[16] = "Count.S.Emp"
+names(oregon.edit.data)[17] = "PopDen.S"
+names(oregon.edit.data)[18] = "PopDen.S.Sales"
+names(oregon.edit.data)[19] = "PopDen.S.Emp"
+names(oregon.edit.data)[20] = "LandDen.S"
+names(oregon.edit.data)[21] = "LandDen.S.Sales"
+names(oregon.edit.data)[22] = "LandDen.S.Emp"
+names(oregon.edit.data)[23] = "Count.W"
+names(oregon.edit.data)[24] = "Count.W.Sales"
+names(oregon.edit.data)[25] = "Count.w.Emp"
+names(oregon.edit.data)[26] = "PopDen.W"
+names(oregon.edit.data)[27] = "PopDen.W.Sales"
+names(oregon.edit.data)[28] = "PopDen.W.Emp"
+names(oregon.edit.data)[29] = "LandDen.W"
+names(oregon.edit.data)[30] = "LandDen.W.Sales"
+names(oregon.edit.data)[31] = "LandDen.W.Emp"
+
+
+oregon.edit.data = rbind(oregon.edit.data, grocery.nc.county.2017)
+
+
+}
+oregon.edit.data
+```
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+###texas
+northcarolina = grep("^48", grocery$tract_fips10)
+grocery.nc = grocery[northcarolina, ]
+
+grocery.nc$fips = gsub("(^\\d{5}).*", "\\1", grocery.nc$tract_fips10)
+grocery.nc$fips = as.numeric(grocery.nc$fips) 
+
+
+
+
+
+years.v = c(2009, 2013, 2017)
+
+
+grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+texas.edit.data= grocery.nc.county.2017
+
+for (y in 1:3) {
+
+  grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+
+grocery.nc.2017 = subset(grocery.nc, grocery.nc$year == years.v[y] )
+grocery.nc.2017 = subset(grocery.nc.2017, grocery.nc.2017$population != 0)
+
+
+unique.nc.fips.2017 = unique(grocery.nc.2017$fips)
+
+
+ 
+
+###add every colum you will need
+#add year
+
+
+
+for (f in 1:length(unique.nc.fips.2017)) {
+  indivigualFIPS = subset(grocery.nc.2017, fips == unique.nc.fips.2017[f])
+
+  
+    grocery.nc.county.2017 = rbind(grocery.nc.county.2017, 
+          c( unique.nc.fips.2017[f], 
+             years.v[y],
+             sum(indivigualFIPS$population), 
+             sum(indivigualFIPS$aland10), 
+             sum(indivigualFIPS$count_445110),
+             sum(indivigualFIPS$count_sales_445110),
+             sum(indivigualFIPS$count_emp_445110),
+             (sum(indivigualFIPS$count_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_445110)*1000)/sum(indivigualFIPS$population),
+             
+            
+             (sum(indivigualFIPS$count_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_445110))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_4452),
+             sum(indivigualFIPS$count_sales_4452),
+             sum(indivigualFIPS$count_emp_4452),
+             (sum(indivigualFIPS$count_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_4452))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_452311),
+             sum(indivigualFIPS$count_sales_452311),
+             sum(indivigualFIPS$count_emp_452311),
+             (sum(indivigualFIPS$count_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_452311))/sum(indivigualFIPS$aland10)
+
+             ))
+}
+
+
+
+
+names(grocery.nc.county.2017)[1] = "fips"
+names(grocery.nc.county.2017)[2] = "Year"
+names(grocery.nc.county.2017)[3] = "Population"
+names(grocery.nc.county.2017)[4] = "Sq Miles"
+names(grocery.nc.county.2017)[5] = "Count.B"
+names(grocery.nc.county.2017)[6] = "Count.B.Sales"
+names(grocery.nc.county.2017)[7] = "Count.B.Emp"
+names(grocery.nc.county.2017)[8] = "PopDen.B"
+names(grocery.nc.county.2017)[9] = "PopDen.B.Sales"
+names(grocery.nc.county.2017)[10] = "PopDen.B.Emp"
+names(grocery.nc.county.2017)[11] = "LandDen.B"
+names(grocery.nc.county.2017)[12] = "LandDen.B.Sales"
+names(grocery.nc.county.2017)[13] = "LandDen.B.Emp"
+names(grocery.nc.county.2017)[14] = "Count.S"
+names(grocery.nc.county.2017)[15] = "Count.S.Sales"
+names(grocery.nc.county.2017)[16] = "Count.S.Emp"
+names(grocery.nc.county.2017)[17] = "PopDen.S"
+names(grocery.nc.county.2017)[18] = "PopDen.S.Sales"
+names(grocery.nc.county.2017)[19] = "PopDen.S.Emp"
+names(grocery.nc.county.2017)[20] = "LandDen.S"
+names(grocery.nc.county.2017)[21] = "LandDen.S.Sales"
+names(grocery.nc.county.2017)[22] = "LandDen.S.Emp"
+names(grocery.nc.county.2017)[23] = "Count.W"
+names(grocery.nc.county.2017)[24] = "Count.W.Sales"
+names(grocery.nc.county.2017)[25] = "Count.w.Emp"
+names(grocery.nc.county.2017)[26] = "PopDen.W"
+names(grocery.nc.county.2017)[27] = "PopDen.W.Sales"
+names(grocery.nc.county.2017)[28] = "PopDen.W.Emp"
+names(grocery.nc.county.2017)[29] = "LandDen.W"
+names(grocery.nc.county.2017)[30] = "LandDen.W.Sales"
+names(grocery.nc.county.2017)[31] = "LandDen.W.Emp"
+
+names(texas.edit.data)[1] = "fips"
+names(texas.edit.data)[2] = "Year"
+names(texas.edit.data)[3] = "Population"
+names(texas.edit.data)[4] = "Sq Miles"
+names(texas.edit.data)[5] = "Count.B"
+names(texas.edit.data)[6] = "Count.B.Sales"
+names(texas.edit.data)[7] = "Count.B.Emp"
+names(texas.edit.data)[8] = "PopDen.B"
+names(texas.edit.data)[9] = "PopDen.B.Sales"
+names(texas.edit.data)[10] = "PopDen.B.Emp"
+names(texas.edit.data)[11] = "LandDen.B"
+names(texas.edit.data)[12] = "LandDen.B.Sales"
+names(texas.edit.data)[13] = "LandDen.B.Emp"
+names(texas.edit.data)[14] = "Count.S"
+names(texas.edit.data)[15] = "Count.S.Sales"
+names(texas.edit.data)[16] = "Count.S.Emp"
+names(texas.edit.data)[17] = "PopDen.S"
+names(texas.edit.data)[18] = "PopDen.S.Sales"
+names(texas.edit.data)[19] = "PopDen.S.Emp"
+names(texas.edit.data)[20] = "LandDen.S"
+names(texas.edit.data)[21] = "LandDen.S.Sales"
+names(texas.edit.data)[22] = "LandDen.S.Emp"
+names(texas.edit.data)[23] = "Count.W"
+names(texas.edit.data)[24] = "Count.W.Sales"
+names(texas.edit.data)[25] = "Count.w.Emp"
+names(texas.edit.data)[26] = "PopDen.W"
+names(texas.edit.data)[27] = "PopDen.W.Sales"
+names(texas.edit.data)[28] = "PopDen.W.Emp"
+names(texas.edit.data)[29] = "LandDen.W"
+names(texas.edit.data)[30] = "LandDen.W.Sales"
+names(texas.edit.data)[31] = "LandDen.W.Emp"
+
+
+texas.edit.data = rbind(texas.edit.data, grocery.nc.county.2017)
+
+
+}
+texas.edit.data
+```
+
+
+
+
+
+```{r}
+###iowa
+northcarolina = grep("^19", grocery$tract_fips10)
+grocery.nc = grocery[northcarolina, ]
+
+grocery.nc$fips = gsub("(^\\d{5}).*", "\\1", grocery.nc$tract_fips10)
+grocery.nc$fips = as.numeric(grocery.nc$fips) 
+
+
+
+
+
+years.v = c(2009, 2013, 2017)
+
+
+grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+iowa.edit.data= grocery.nc.county.2017
+
+for (y in 1:3) {
+
+  grocery.nc.county.2017 = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+
+grocery.nc.2017 = subset(grocery.nc, grocery.nc$year == years.v[y] )
+grocery.nc.2017 = subset(grocery.nc.2017, grocery.nc.2017$population != 0)
+
+
+unique.nc.fips.2017 = unique(grocery.nc.2017$fips)
+
+
+ 
+
+###add every colum you will need
+#add year
+
+
+
+for (f in 1:length(unique.nc.fips.2017)) {
+  indivigualFIPS = subset(grocery.nc.2017, fips == unique.nc.fips.2017[f])
+
+  
+    grocery.nc.county.2017 = rbind(grocery.nc.county.2017, 
+          c( unique.nc.fips.2017[f], 
+             years.v[y],
+             sum(indivigualFIPS$population), 
+             sum(indivigualFIPS$aland10), 
+             sum(indivigualFIPS$count_445110),
+             sum(indivigualFIPS$count_sales_445110),
+             sum(indivigualFIPS$count_emp_445110),
+             (sum(indivigualFIPS$count_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_445110)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_445110)*1000)/sum(indivigualFIPS$population),
+             
+            
+             (sum(indivigualFIPS$count_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_445110))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_445110))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_4452),
+             sum(indivigualFIPS$count_sales_4452),
+             sum(indivigualFIPS$count_emp_4452),
+             (sum(indivigualFIPS$count_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_4452)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_4452))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_4452))/sum(indivigualFIPS$aland10),
+             
+             sum(indivigualFIPS$count_452311),
+             sum(indivigualFIPS$count_sales_452311),
+             sum(indivigualFIPS$count_emp_452311),
+             (sum(indivigualFIPS$count_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_sales_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_emp_452311)*1000)/sum(indivigualFIPS$population),
+             (sum(indivigualFIPS$count_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_sales_452311))/sum(indivigualFIPS$aland10),
+             (sum(indivigualFIPS$count_emp_452311))/sum(indivigualFIPS$aland10)
+
+             ))
+}
+
+
+
+
+names(grocery.nc.county.2017)[1] = "fips"
+names(grocery.nc.county.2017)[2] = "Year"
+names(grocery.nc.county.2017)[3] = "Population"
+names(grocery.nc.county.2017)[4] = "Sq Miles"
+names(grocery.nc.county.2017)[5] = "Count.B"
+names(grocery.nc.county.2017)[6] = "Count.B.Sales"
+names(grocery.nc.county.2017)[7] = "Count.B.Emp"
+names(grocery.nc.county.2017)[8] = "PopDen.B"
+names(grocery.nc.county.2017)[9] = "PopDen.B.Sales"
+names(grocery.nc.county.2017)[10] = "PopDen.B.Emp"
+names(grocery.nc.county.2017)[11] = "LandDen.B"
+names(grocery.nc.county.2017)[12] = "LandDen.B.Sales"
+names(grocery.nc.county.2017)[13] = "LandDen.B.Emp"
+names(grocery.nc.county.2017)[14] = "Count.S"
+names(grocery.nc.county.2017)[15] = "Count.S.Sales"
+names(grocery.nc.county.2017)[16] = "Count.S.Emp"
+names(grocery.nc.county.2017)[17] = "PopDen.S"
+names(grocery.nc.county.2017)[18] = "PopDen.S.Sales"
+names(grocery.nc.county.2017)[19] = "PopDen.S.Emp"
+names(grocery.nc.county.2017)[20] = "LandDen.S"
+names(grocery.nc.county.2017)[21] = "LandDen.S.Sales"
+names(grocery.nc.county.2017)[22] = "LandDen.S.Emp"
+names(grocery.nc.county.2017)[23] = "Count.W"
+names(grocery.nc.county.2017)[24] = "Count.W.Sales"
+names(grocery.nc.county.2017)[25] = "Count.w.Emp"
+names(grocery.nc.county.2017)[26] = "PopDen.W"
+names(grocery.nc.county.2017)[27] = "PopDen.W.Sales"
+names(grocery.nc.county.2017)[28] = "PopDen.W.Emp"
+names(grocery.nc.county.2017)[29] = "LandDen.W"
+names(grocery.nc.county.2017)[30] = "LandDen.W.Sales"
+names(grocery.nc.county.2017)[31] = "LandDen.W.Emp"
+
+names(iowa.edit.data)[1] = "fips"
+names(iowa.edit.data)[2] = "Year"
+names(iowa.edit.data)[3] = "Population"
+names(iowa.edit.data)[4] = "Sq Miles"
+names(iowa.edit.data)[5] = "Count.B"
+names(iowa.edit.data)[6] = "Count.B.Sales"
+names(iowa.edit.data)[7] = "Count.B.Emp"
+names(iowa.edit.data)[8] = "PopDen.B"
+names(iowa.edit.data)[9] = "PopDen.B.Sales"
+names(iowa.edit.data)[10] = "PopDen.B.Emp"
+names(iowa.edit.data)[11] = "LandDen.B"
+names(iowa.edit.data)[12] = "LandDen.B.Sales"
+names(iowa.edit.data)[13] = "LandDen.B.Emp"
+names(iowa.edit.data)[14] = "Count.S"
+names(iowa.edit.data)[15] = "Count.S.Sales"
+names(iowa.edit.data)[16] = "Count.S.Emp"
+names(iowa.edit.data)[17] = "PopDen.S"
+names(iowa.edit.data)[18] = "PopDen.S.Sales"
+names(iowa.edit.data)[19] = "PopDen.S.Emp"
+names(iowa.edit.data)[20] = "LandDen.S"
+names(iowa.edit.data)[21] = "LandDen.S.Sales"
+names(iowa.edit.data)[22] = "LandDen.S.Emp"
+names(iowa.edit.data)[23] = "Count.W"
+names(iowa.edit.data)[24] = "Count.W.Sales"
+names(iowa.edit.data)[25] = "Count.w.Emp"
+names(iowa.edit.data)[26] = "PopDen.W"
+names(iowa.edit.data)[27] = "PopDen.W.Sales"
+names(iowa.edit.data)[28] = "PopDen.W.Emp"
+names(iowa.edit.data)[29] = "LandDen.W"
+names(iowa.edit.data)[30] = "LandDen.W.Sales"
+names(iowa.edit.data)[31] = "LandDen.W.Emp"
+
+
+iowa.edit.data = rbind(iowa.edit.data, grocery.nc.county.2017)
+
+
+}
+iowa.edit.data
+
+```
+
+
+
+
+```{r}
+nc.edit.data
+ny.edit.data
+miss.edit.data
+mont.edit.data
+wv.edit.data
+iowa.edit.data
+texas.edit.data
+oregon.edit.data
+```
+```{r}
+grocery.8.states = data.frame(fips = character(), year = numeric(), population = numeric(), totalland = numeric(), 
+          numbasicstores = numeric(), numbasicsales = numeric(), numbasicemp = numeric(),
+          popdenbasic = numeric(), popdensales = numeric(), popdenemp= numeric(),
+          landdenbasic = numeric(), landdensalesbasic = numeric(), landdenemp = numeric(),
+          numspecialstores = numeric(), numspecialsales = numeric(), numspecialemp = numeric(),
+          popdenspecial = numeric(), popdensalesspecial = numeric(), popdenempspecial= numeric(),
+          landdenspecial = numeric(), landdensalespecial = numeric(), landdenempspecial = numeric(),
+          numwarehousestores = numeric(), numwarehousesales = numeric(), numwarehouseemp = numeric(),
+          popdenwarehouse = numeric(), popdensaleswarehouse = numeric(), popdenempwarehouse= numeric(),
+        landdenwarehouse = numeric(), landdensalewarehouse = numeric(), landdenempwarehouse = numeric())
+
+
+
+grocery.8.states = rbind(nc.edit.data, ny.edit.data , miss.edit.data , mont.edit.data , wv.edit.data , iowa.edit.data , texas.edit.data , oregon.edit.data)
+
+grocery.8.states
+```
+
