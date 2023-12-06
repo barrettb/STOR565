@@ -1,0 +1,143 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(readr)
+library(tidyverse)
+library(stats)
+groc.file = read_csv("grocreal.csv", show_col_types = FALSE)
+```
+```{r}
+#groc.file =groc.file[2:61]
+groc.file
+shuffle = sample.int(nrow(groc.file))
+
+
+groc.file$split=cut(shuffle,breaks =5,labels =c("train",'train','train',"train", "test"))
+GH.train  =subset(groc.file, split=="train",select =-split)
+GH.test = subset(groc.file, split=="test",select =-split)
+GH.train
+GH.test
+
+```
+```{r}
+write.csv(GH.train, "C:/Users/ewoodnc/Desktop/College/stor 565/project//GH.train.csv", row.names=FALSE)
+write.csv(GH.test, "C:/Users/ewoodnc/Desktop/College/stor 565/project//GH.test.csv", row.names=FALSE)
+```
+
+
+
+
+```{r}
+
+#with p/3
+library(randomForest)
+set.seed (1)
+   rf.groc <- randomForest(Overall.Mortality.Rate ~ logarithm_pop + logarithm_miles + Count.B+ Count.B.Sales + Count.B.Emp + PopDen.B + PopDen.B.Sales + PopDen.B.Emp + LandDen.B + LandDen.B.Sales + LandDen.B.Emp + Count.S+ Count.S.Sales + Count.S.Emp + PopDen.S + PopDen.S.Sales + PopDen.S.Emp + LandDen.S + LandDen.S.Sales + LandDen.S.Emp +Count.W+ Count.W.Sales + Count.w.Emp + PopDen.W + PopDen.W.Sales + PopDen.W.Emp + LandDen.W + LandDen.W.Sales + LandDen.W.Emp , data = GH.train , mtry = 9, importance = TRUE)
+ yhat.rf <- predict(rf.groc, newdata = GH.test)
+ print("testing error")
+sqrt(mean(( yhat.rf - GH.test$Overall.Mortality.Rate)^2))
+sqrt(mean(( yhat.rf - GH.test$Overall.Mortality.Rate)^2))
+
+print("training error")
+sqrt(mean(( rf.groc$predicted- GH.train$Overall.Mortality.Rate)^2))
+
+
+imporance.rf.vector = importance(rf.groc)
+
+imporance.rf.vector
+imporance.rf.vector[,1]
+soreted.v = sort(imporance.rf.vector[,1])
+B =names(soreted.v)
+barplot(soreted.v ,ylab = "Variable Importance", main = "RF w/ p/3 Variable Importance Plot", names.arg = B,col = 2, las=2, cex.names=.5)
+
+varImpPlot(rf.groc)
+
+
+
+
+
+
+```
+
+
+
+```{r}
+#rf with sqrt p
+set.seed (1)
+   rf.groc.sq <- randomForest(Overall.Mortality.Rate ~ logarithm_pop + logarithm_miles + Count.B+ Count.B.Sales + Count.B.Emp + PopDen.B + PopDen.B.Sales + PopDen.B.Emp + LandDen.B + LandDen.B.Sales + LandDen.B.Emp + Count.S+ Count.S.Sales + Count.S.Emp + PopDen.S + PopDen.S.Sales + PopDen.S.Emp + LandDen.S + LandDen.S.Sales + LandDen.S.Emp +Count.W+ Count.W.Sales + Count.w.Emp + PopDen.W + PopDen.W.Sales + PopDen.W.Emp + LandDen.W + LandDen.W.Sales + LandDen.W.Emp , data = GH.train , mtry = 5, importance = TRUE)
+ yhat.rf.sq <- predict(rf.groc.sq, newdata = GH.test)
+  print("testing error")
+
+ sqrt(mean(( yhat.rf.sq - GH.test$Overall.Mortality.Rate)^2))
+
+ print("training error")
+sqrt(mean(( rf.groc.sq$predicted- GH.train$Overall.Mortality.Rate)^2))
+
+
+imporance.rf.vector = importance(rf.groc.sq)
+
+imporance.rf.vector
+imporance.rf.vector[,1]
+soreted.v = sort(imporance.rf.vector[,1])
+B =names(soreted.v)
+```
+
+
+```{r}
+barplot(soreted.v ,ylab = "Variable Importance", main = "RF w/ sqrt(p) Variable Importance Plot", names.arg = B,col = 2, las=2, cex.names=.5)
+```
+
+
+```{r}
+varImpPlot(rf.groc.sq)
+```
+
+
+
+```{r}
+library(tree)
+library(data.tree)
+
+library(rpart)
+library(rpart.plot)
+
+
+
+
+
+groc.tree = tree(Overall.Mortality.Rate ~ logarithm_pop + logarithm_miles + Count.B+ Count.B.Sales + Count.B.Emp + PopDen.B + PopDen.B.Sales + PopDen.B.Emp + LandDen.B + LandDen.B.Sales + LandDen.B.Emp + Count.S+ Count.S.Sales + Count.S.Emp + PopDen.S + PopDen.S.Sales + PopDen.S.Emp + LandDen.S + LandDen.S.Sales + LandDen.S.Emp +Count.W+ Count.W.Sales + Count.w.Emp + PopDen.W + PopDen.W.Sales + PopDen.W.Emp + LandDen.W + LandDen.W.Sales + LandDen.W.Emp , data = GH.train , )
+names(groc.tree)
+groc.tree
+plot(groc.tree)
+text(groc.tree, pretty = 0)
+
+cv.groc.tree = cv.tree(groc.tree, FUN = prune.tree)
+names(cv.groc.tree)
+cv.groc.tree
+
+
+
+
+
+
+pruned.groc = prune.tree(groc.tree, best= 8)
+plot(pruned.groc)
+text(pruned.groc, pretty = 0)
+
+
+tree.pred = predict(pruned.groc, GH.test)
+
+tree.pred.train = predict(pruned.groc, GH.train)
+
+print("testing error")
+
+sqrt(mean((GH.test$Overall.Mortality.Rate - tree.pred)^2))
+print("training error")
+sqrt(mean(( tree.pred.train- GH.train$Overall.Mortality.Rate)^2))
+
+
+prp(pruned.groc)
+```
+
