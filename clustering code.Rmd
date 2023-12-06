@@ -1,0 +1,603 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(readr)
+library(tidyverse)
+library(stats)
+grocheal.train = read_csv("groceryhealthtrain.csv", show_col_types = FALSE)
+grocheal.test = read_csv("groceryhealthtest.csv", show_col_types = FALSE)
+grocery.health = read_csv("groceryhealth2.csv", show_col_types = FALSE)
+
+
+```
+
+```{r}
+
+grocery.health$logpop = log(grocery.health$Population)
+grocery.health$logmiles = log(grocery.health$`Sq Miles`)
+
+
+grocery.health
+#grocery.health2 = select(grocery.health, 4:5, 8,11, 14, 17, 20, 23, 26, 29 ,57)
+#grocery.health2 = select(grocery.health, 4:31 ,57)
+#removing miles and pop and using log of these things
+grocery.health2 = select(grocery.health, 5:31 ,57,58)
+grocery.health.scaled = scale(grocery.health2)
+
+grocery.health2
+#add in origional grocery health with all those variables
+grocery.health3 =na.omit(grocery.health2)   
+
+grocery.health.scaled = grocery.health3
+
+grocery.health.cor = cor(grocery.health3)
+grocery.health.cor
+#, method = c("spearman")
+
+hist(grocery.health$Population)
+hist(grocery.health$`Sq Miles`)
+hist(grocery.health2$logpop)
+hist(log(grocery.health2$logmiles))
+
+hist(grocery.health$Count.B)
+
+#maybe to really see a cluster of food deserts, we would have to remove outliers. Big Population, big sq which we tried with the log of the square miles and pop. 
+
+#try different distances (did with complete and single) on k-means too
+#how would we weight these clusters?
+
+#create those charts on unsupervised summary
+
+```
+
+```{r}
+
+
+
+pc.out1 = prcomp(grocery.health3)
+
+plot(pc.out1$x)
+
+pc.out1$sdev[1]/sum(pc.out1$sdev)
+pc.out1$sdev[2]/sum(pc.out1$sdev)
+plot(pc.out1$rotation, type = "n")
+text(pc.out1$rotation, names(grocery.health3), col = 4)
+pc.out1$rotation
+```
+
+
+```{r}
+pc.out = prcomp(grocery.health3,scale. = TRUE)
+
+plot(pc.out$x, xlab = "PC1 - 22.04% of Variability", ylab = "PC2 - 13.38% of Variability", main = "PCA Analysis")
+
+pc.out$sdev[1]/sum(pc.out$sdev)
+pc.out$sdev[2]/sum(pc.out$sdev)
+pc.out$sdev[3]/sum(pc.out$sdev)
+pc.out$sdev[4]/sum(pc.out$sdev)
+pc.out$sdev[5]/sum(pc.out$sdev)
+pc.out$sdev[6]/sum(pc.out$sdev)
+plot(pc.out$rotation, type = "n", xlab = "PC3 - 10.98% of Variability", ylab = "PC4 - 10.84% of Variability", main = "PCA Analysis")
+text(pc.out$rotation, names(grocery.health3), col = 4)
+
+
+plot(pc.out$x[,3], pc.out$x[,4], xlab = "PC1 - 22.04% of Variability", ylab = "PC2 - 13.38% of Variability", main = "PCA Analysis")
+
+plot(pc.out$rotation[,3], pc.out$rotation[,4],  type = "n", xlab = "PC3 - 10.98% of Variability", ylab = "PC4 - 10.84% of Variability", main = "PCA Analysis")
+text(pc.out$rotation, names(grocery.health3), col = 4)
+
+#should we scale? I think yes... variables in different units... and the ones that are in the same units are nearly identical so scaling shouldnt harm it too much
+
+```
+
+
+
+
+```{r}
+library(cluster)
+grocery.health3
+wss.v = c()
+wss.v[1] = 0
+for (i in 2:10) {
+  km.out = kmeans(grocery.health3, i, nstart = 20)
+ wss.v[i] = km.out$tot.withinss
+}
+plot(wss.v, xlim = c(2,10), xlab = "Number of K Clusters", ylab = "WSS", main = "WSS Plot")
+line(x = 1:10, y = wss.v)
+wss.v2 = c()
+
+for (i in 2:10) {
+  km.out = kmeans(grocery.health3, i, nstart = 50)
+ wss.v2[i-1] = km.out$tot.withinss
+}
+plot(wss.v2)
+wss.v2
+
+
+#5 looks good (4 on index)? maybe decide this by looking at sevel k  clusters
+# this was including square miles
+#without square miles, do 4
+
+```
+
+```{r}
+set.seed(123)
+km.out4 = kmeans(grocery.health3, 4, nstart = 20)
+km.out4$tot.withinss
+
+km.out4$size
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.cluster = km.out4$cluster
+groc.reduced1 = cbind(groc.cluster, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.cluster == 1 )
+subtype.22 = subset(groc.reduced1, groc.cluster == 2 )
+subtype.23 = subset(groc.reduced1, groc.cluster == 3)
+subtype.24 = subset(groc.reduced1, groc.cluster == 4 )
+
+
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "4 clusters k-means", xlab = "PC1 - 22.04% of Variability", ylab = "PC2 - 13.38% of Variability")
+points( subtype.21$PC1, subtype.21$PC2, col=2, pch = 16)
+points( subtype.22$PC1, subtype.22$PC2, col=6 , pch = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4, pch = 16 )
+points( subtype.24$PC1, subtype.24$PC2, col=3, pch = 16)
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3', 'cluster 4'), col = c(2,6,4, 3),  pch = 16)
+```
+
+```{r}
+
+km.out5 = kmeans(grocery.health3, 5, nstart = 20)
+km.out5$tot.withinss
+
+km.out5$size
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.cluster = km.out5$cluster
+groc.reduced1 = cbind(groc.cluster, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.cluster == 1 )
+subtype.22 = subset(groc.reduced1, groc.cluster == 2 )
+subtype.23 = subset(groc.reduced1, groc.cluster == 3)
+subtype.24 = subset(groc.reduced1, groc.cluster == 4 )
+subtype.25 = subset(groc.reduced1, groc.cluster == 5 )
+
+
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "5 clusters k-means", xlab = "PC1 - 22.04% of Variability", ylab = "PC2 - 13.38% of Variability")
+points( subtype.21$PC1, subtype.21$PC2, col=2 , pch = 16)
+points( subtype.22$PC1, subtype.22$PC2, col=3 , pch = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+points( subtype.24$PC1, subtype.24$PC2, col=5 , pch = 16)
+points( subtype.25$PC1, subtype.25$PC2, col=6, pch = 16 )
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3', 'cluster 4', 'cluster 5'), col = c(2,3,4, 5, 6),  pch = 16)
+```
+
+```{r}
+
+km.out3 = kmeans(grocery.health3, 3, nstart = 20)
+km.out3$tot.withinss
+
+km.out3$size
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.cluster = km.out3$cluster
+groc.reduced1 = cbind(groc.cluster, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.cluster == 1 )
+subtype.22 = subset(groc.reduced1, groc.cluster == 2 )
+subtype.23 = subset(groc.reduced1, groc.cluster == 3)
+
+
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "3 clusters k-means", xlab = "PC1 - 22.04% of Variability", ylab = "PC2 - 13.38% of Variability")
+points( subtype.21$PC1, subtype.21$PC2, col=2, pch  = 16 )
+points( subtype.22$PC1, subtype.22$PC2, col=3 , pch  = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch  = 16)
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3'), col = c(2,3,4),  pch = 16)
+```
+```{r}
+hc.complete <- hclust(dist(grocery.health3), method = "complete")
+summary(hc.complete)
+plot(hc.complete , main = "Complete Linkage", xlab = "", sub = "")
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 3)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "complete 3 clusters")
+points( subtype.21$PC1, subtype.21$PC2, col=2, pch = 16 )
+points( subtype.22$PC1, subtype.22$PC2, col=3 , pch = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3'), col = c(2,3,4),  pch = 16)
+
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 4)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+subtype.24 = subset(groc.reduced1, groc.complete == 4 )
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+nrow(subtype.24)
+
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "complete 4 clusters, euclidean", xlab = "PC1 - 22.04% of Variability", ylab = "PC2 - 13.38% of Variability")
+points( subtype.21$PC1, subtype.21$PC2, col=2 , pch = 16 )
+points( subtype.22$PC1, subtype.22$PC2, col=3, pch = 16 )
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+points( subtype.24$PC1, subtype.24$PC2, col=6, pch = 16 )
+
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3', 'cluster 4'), col = c(2,3,4, 6),  pch = 16)
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 5)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+subtype.24 = subset(groc.reduced1, groc.complete == 4)
+subtype.25 = subset(groc.reduced1, groc.complete == 5)
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+nrow(subtype.24)
+nrow(subtype.25)
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "complete 3 clusters")
+points( subtype.21$PC1, subtype.21$PC2, col=2 )
+points( subtype.22$PC1, subtype.22$PC2, col=3 , pch = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+points( subtype.24$PC1, subtype.24$PC2, col=5 , pch = 16)
+points( subtype.25$PC1, subtype.25$PC2, col=6 , pch = 16)
+
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3', 'cluster 4', 'cluster 5'), col = c(2,3,4, 5, 6),  pch = 16)
+
+```
+```{r}
+hc.complete <- hclust(dist(grocery.health3), method = "single")
+
+plot(hc.complete , main = "single Linkage", xlab = "", sub = "")
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 3)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "single 3 clusters")
+points( subtype.21$PC1, subtype.21$PC2, col=2 )
+points( subtype.22$PC1, subtype.22$PC2, col=3 , pch = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3'), col = c(2,3,4),  pch = 16)
+
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 4)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+subtype.24 = subset(groc.reduced1, groc.complete == 4 )
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+nrow(subtype.24)
+
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "single 4 clusters, euclidean", xlab = "PC1 - 22.04% of Variability", ylab = "PC2 - 13.38% of Variability")
+points( subtype.21$PC1, subtype.21$PC2, col=2, pch = 16  )
+points( subtype.22$PC1, subtype.22$PC2, col=3, pch = 16 )
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+points( subtype.24$PC1, subtype.24$PC2, col=6, pch = 16 )
+
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3', 'cluster 4'), col = c(2,3,4, 6),  pch = 16)
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 5)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+subtype.24 = subset(groc.reduced1, groc.complete == 4)
+subtype.25 = subset(groc.reduced1, groc.complete == 5)
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+nrow(subtype.24)
+nrow(subtype.25)
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "single 3 clusters")
+points( subtype.21$PC1, subtype.21$PC2, col=2 )
+points( subtype.22$PC1, subtype.22$PC2, col=3 , pch = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+points( subtype.24$PC1, subtype.24$PC2, col=5 , pch = 16)
+points( subtype.25$PC1, subtype.25$PC2, col=6 , pch = 16)
+
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3', 'cluster 4', 'cluster 5'), col = c(2,3,4, 5, 6),  pch = 16)
+
+```
+
+```{r}
+hc.complete <- hclust(dist(grocery.health3, method = "manhattan"), method = "complete")
+summary(hc.complete)
+plot(hc.complete , main = "Complete Linkage", xlab = "", sub = "")
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 3)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "complete 3 clusters")
+points( subtype.21$PC1, subtype.21$PC2, col=2, pch = 16 )
+points( subtype.22$PC1, subtype.22$PC2, col=3 , pch = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3'), col = c(2,3,4),  pch = 16)
+
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 4)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+subtype.24 = subset(groc.reduced1, groc.complete == 4 )
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+nrow(subtype.24)
+
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "complete 4 clusters, manhattan", xlab = "PC1 - 22.04% of Variability", ylab = "PC2 - 13.38% of Variability")
+points( subtype.21$PC1, subtype.21$PC2, col=2, pch = 16 )
+points( subtype.22$PC1, subtype.22$PC2, col=6, pch = 16 )
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+points( subtype.24$PC1, subtype.24$PC2, col=3, pch = 16 )
+
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3', 'cluster 4'), col = c(2,6,4, 3),  pch = 16)
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 5)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+subtype.24 = subset(groc.reduced1, groc.complete == 4)
+subtype.25 = subset(groc.reduced1, groc.complete == 5)
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+nrow(subtype.24)
+nrow(subtype.25)
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "complete 3 clusters")
+points( subtype.21$PC1, subtype.21$PC2, col=2 )
+points( subtype.22$PC1, subtype.22$PC2, col=3 , pch = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+points( subtype.24$PC1, subtype.24$PC2, col=5 , pch = 16)
+points( subtype.25$PC1, subtype.25$PC2, col=6 , pch = 16)
+
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3', 'cluster 4', 'cluster 5'), col = c(2,3,4, 5, 6),  pch = 16)
+
+```
+```{r}
+hc.complete <- hclust(dist(grocery.health3, method = "manhattan"), method = "single")
+
+plot(hc.complete , main = "single Linkage", xlab = "", sub = "")
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 3)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "single 3 clusters")
+points( subtype.21$PC1, subtype.21$PC2, col=2 )
+points( subtype.22$PC1, subtype.22$PC2, col=3 , pch = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3'), col = c(2,3,4),  pch = 16)
+
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 4)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+subtype.24 = subset(groc.reduced1, groc.complete == 4 )
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+nrow(subtype.24)
+
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "single 4 clusters, manhattan", xlab = "PC1 - 22.04% of Variability", ylab = "PC2 - 13.38% of Variability")
+points( subtype.21$PC1, subtype.21$PC2, col=2, pch = 16 )
+points( subtype.22$PC1, subtype.22$PC2, col=3, pch = 16 )
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+points( subtype.24$PC1, subtype.24$PC2, col=6, pch = 16 )
+
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3', 'cluster 4'), col = c(2,3,4, 6),  pch = 16)
+
+
+groc.reduced = as.data.frame(pc.out$x)
+groc.complete = cutree(hc.complete , 5)
+groc.reduced1 = cbind(groc.complete, groc.reduced)
+
+subtype.21 = subset(groc.reduced1, groc.complete == 1 )
+subtype.22 = subset(groc.reduced1, groc.complete == 2 )
+subtype.23 = subset(groc.reduced1, groc.complete == 3)
+subtype.24 = subset(groc.reduced1, groc.complete == 4)
+subtype.25 = subset(groc.reduced1, groc.complete == 5)
+
+nrow(subtype.21)
+nrow(subtype.22)
+nrow(subtype.23)
+nrow(subtype.24)
+nrow(subtype.25)
+
+plot(groc.reduced1$PC1, groc.reduced1$PC2, main = "single 3 clusters")
+points( subtype.21$PC1, subtype.21$PC2, col=2 )
+points( subtype.22$PC1, subtype.22$PC2, col=3 , pch = 16)
+points( subtype.23$PC1, subtype.23$PC2, col=4 , pch = 16)
+points( subtype.24$PC1, subtype.24$PC2, col=5 , pch = 16)
+points( subtype.25$PC1, subtype.25$PC2, col=6 , pch = 16)
+
+legend(x="topleft", legend = c("cluster 1", "cluster 2", 'cluster 3', 'cluster 4', 'cluster 5'), col = c(2,3,4, 5, 6),  pch = 16)
+
+```
+```{r}
+#download 4.3 of r
+#if (!require("BiocManager", quietly = TRUE))
+   #install.packages("BiocManager")
+
+#BiocManager::install("ConsensusClusterPlus")
+#f (!require("Biobase", quietly = TRUE))
+ #  install.packages("Biobase")
+
+#if (!require("BiocManager", quietly = TRUE))
+  #  install.packages("BiocManager")
+
+#BiocManager::install("Biobase")
+
+library(Biobase)
+
+library(ConsensusClusterPlus)
+```
+
+```{r}
+groc.matrix = as.matrix(grocery.health3)
+
+
+dist.matrix = dist(grocery.health3, method = "euclidean")
+
+```
+
+
+```{r}
+#hiretical, with average, and euclidean distance
+title=tempdir()
+
+#concensus.results = ConsensusClusterPlus(dist.matrix,maxK=6,reps=50,pItem=0.8,pFeature=1, title=title,clusterAlg= "hc",distance="euclidean",seed=1262118388.71279,plot=NULL)
+
+```
+```{r}
+concensus.results[[5]][["consensusTree"]]
+
+#icl = calcICL(concensus.results,title=title,plot="png")
+
+#icl[["clusterConsensus"]]
+
+```
+```{r}
+
+# hiretical with average and manhattan distance
+
+# i think this one only worked with the variables, not observations
+
+#concensus.results = ConsensusClusterPlus(groc.matrix,maxK=6,reps=50,pItem=0.8,pFeature=1, title=title,clusterAlg= "hc",distance="manhattan",seed=1262118388.71279,plot=NULL)
+```
+
+```{r}
+concensus.results = ConsensusClusterPlus(dist.matrix,maxK=6,reps=50,pItem=0.8,pFeature=1,finalLinkage = "complete", title=title,clusterAlg= "hc",distance="euclidean",seed=1262118388.71279,plot=NULL)
+```
+
+```{r}
+concensus.results[[5]][["consensusTree"]]
+
+```
+
+
+
+```{r}
+concensus.results = ConsensusClusterPlus(dist.matrix,maxK=6,reps=50,pItem=0.8,pFeature=1,finalLinkage = "complete", title=title,clusterAlg= "hc",distance="manhattan",seed=1262118388.71279,plot=NULL)
+```
+
+```{r}
+concensus.results = ConsensusClusterPlus(dist.matrix,maxK=6,reps=50,pItem=0.8,pFeature=1,finalLinkage = "single", title=title,clusterAlg= "hc",distance="euclidean",seed=1262118388.71279,plot=NULL)
+```
+
+
+
+
+```{r}
+concensus.results = ConsensusClusterPlus(dist.matrix,maxK=6,reps=50,pItem=0.8,pFeature=1,finalLinkage = "single", title=title,clusterAlg= "hc",distance="manhattan",seed=1262118388.71279,plot=NULL)
+```
+
+
+
+
+```{r}
+concensus.results[[5]][["consensusTree"]]
+
+```
+
+
+```{r}
+
+concensus.results = ConsensusClusterPlus(dist.matrix,maxK=6,reps=50,pItem=0.8,pFeature=1, title=title,clusterAlg= "km",distance="euclidean",seed=1262118388.71279,plot=NULL)
+```
+```{r}
+concensus.results = ConsensusClusterPlus(dist.matrix,maxK=8,reps=50,pItem=0.8,pFeature=1, title=title,clusterAlg= "km",distance="euclidean",seed=1262118388.71279,plot=NULL)
+```
+
