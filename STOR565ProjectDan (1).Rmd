@@ -1,0 +1,217 @@
+Libraries
+```{r}
+library(ggplot2)
+library(dplyr) 
+library(tidyr) 
+library(readr) 
+library(corrplot)
+library(GGally) 
+library(caret)
+```
+Reading Data
+```{r}
+data <- read.csv("https://raw.githubusercontent.com/barrettb/STOR565Project/main/UpdatedData1127.csv?token=GHSAT0AAAAAACKJP2OUEUAGAAIRWI5C5HGYZLQ63DQ")
+datatrain <- read.csv("https://raw.githubusercontent.com/barrettb/STOR565Project/main/GH.train.csv?token=GHSAT0AAAAAACKJP2OUKX2MNURWEBA3O3QCZLQ63PA")
+datatest <- read.csv("https://raw.githubusercontent.com/barrettb/STOR565Project/main/GH.test.csv?token=GHSAT0AAAAAACKJP2OUHCXAEPNEFB36IKI4ZLQ63YQ")
+```
+Histograms to show normality
+```{r}
+ggplot(data, aes(x = Overall.Mortality.Rate)) +
+  geom_histogram(binwidth = 0.001, fill = "blue", color = "black") +
+  labs(title = "Histogram of Overall Mortality Rate",
+       x = "Overall Mortality Rate",
+       y = "Frequency") +
+  theme_minimal()
+
+ggplot(data, aes(x = Population)) +
+  geom_histogram(binwidth = 500000, fill = "blue", color = "black") +
+  labs(title = "Histogram of Population",
+       x = "Population",
+       y = "Frequency") +
+  theme_minimal()
+
+ggplot(data, aes(x = Sq.Miles)) +
+  geom_histogram(binwidth = 2000, fill = "blue", color = "black") +
+  labs(title = "Histogram of Square Miles",
+       x = "Square Miles",
+       y = "Frequency") +
+  theme_minimal()
+
+ggplot(data, aes(x = logarithm_pop)) +
+  geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+  labs(title = "Histogram of log(Population)",
+       x = "log(Population)",
+       y = "Frequency") +
+  theme_minimal()
+
+ggplot(data, aes(x = logarithm_miles)) +
+  geom_histogram(binwidth = .5, fill = "blue", color = "black") +
+  labs(title = "Histogram of log(Square Miles)",
+       x = "log(Square Miles)",
+       y = "Frequency") +
+  theme_minimal()
+```
+Cleaning Data
+```{r}
+#full data
+datagrocery <- cbind(data[,60:61], data[, 6:32])
+datahealth <- data[,c(34,37,40,43,46,49,52,55)]
+datagroceryhealth <- cbind(datagrocery,datahealth)
+#train data
+datatraingrocery <- cbind(datatrain[,59:60], datatrain[, 5:31])
+datatrainhealth <- datatrain[,c(33,36,39,42,45,48,51,54)]
+datatraingroceryhealth <- cbind(datagrocery,datahealth)
+#test data
+datatestgrocery <- cbind(datatest[,59:60], datatest[, 5:31])
+datatesthealth <- datatest[,c(33,36,39,42,45,48,51,54)]
+datatestgroceryhealth <- cbind(datagrocery,datahealth)
+```
+
+```{r}
+cor_matrix <- cor(datagrocery)
+corrplot(cor_matrix, method = "color", type = "upper",  
+         tl.col = "black", tl.srt = 45)
+
+cor_matrix <- cor(datahealth)
+corrplot(cor_matrix, method = "color", type = "upper",  
+         tl.col = "black", tl.srt = 45)
+
+cor_matrix <- cor(datagroceryhealth)
+corrplot(cor_matrix, method = "color", type = "upper",  
+         tl.col = "black", tl.srt = 45)
+```
+Linear Regression
+```{r}
+
+set.seed(123)
+
+train_control <- trainControl(method = "cv", number = 5)
+
+
+results <- list()
+
+for (response_col in names(datatrainhealth)) {
+  datatraingrocery[,30] <- datatrainhealth[[response_col]]
+
+  model <- train(V30~., data = datatraingrocery, method = "lm", trControl = train_control)
+  
+  datatraingrocery <- datatraingrocery[,-30]
+  
+  train_predictions <- predict(model, newdata = datatraingrocery)
+
+  test_predictions <- predict(model, newdata = datatestgrocery)
+  
+  rmse_train <- sqrt(mean((datatrainhealth[[response_col]] - train_predictions)^2))
+  rmse_test <- sqrt(mean((datatesthealth[[response_col]] - test_predictions)^2))
+
+  results[[response_col]] <- c(rmse_train,rmse_test)
+}
+print(results)
+```
+PCR
+```{r}
+set.seed(123)
+
+library(pls)
+resultspcr <- list()
+
+for (response_col in names(datahealth)) {
+  datatraingrocery[,30] <- datatrainhealth[[response_col]]
+
+  pcr_model <- pcr(V30 ~ ., data = datatraingrocery, scale = TRUE, validation = "CV", segments = 5)
+  
+  datatraingrocery <- datatraingrocery[,-30]
+
+  train_predictions <- predict(pcr_model, newdata = datatraingrocery)
+
+  test_predictions <- predict(pcr_model, newdata = datatestgrocery)
+    
+  rmse_train <- sqrt(mean((datatrainhealth[[response_col]] - train_predictions)^2))
+  rmse_test <- sqrt(mean((datatesthealth[[response_col]] - test_predictions)^2))
+  
+  resultspcr[[response_col]] <- c(rmse_train,rmse_test)
+}
+
+print(resultspcr)
+```
+PLS
+```{r}
+set.seed(123)
+
+resultspls <- list()
+
+for (response_col in names(datahealth)) {
+  datatraingrocery[,30] <- datatrainhealth[[response_col]]
+
+  pls_model <- plsr(V30 ~ ., data = datatraingrocery, scale = TRUE, validation = "CV", segments = 5)
+
+  datatraingrocery <- datatraingrocery[,-30]
+
+  train_predictions <- predict(pls_model, newdata = datatraingrocery)
+
+  test_predictions <- predict(pls_model, newdata = datatestgrocery)
+    
+  rmse_train <- sqrt(mean((datatrainhealth[[response_col]] - train_predictions)^2))
+  rmse_test <- sqrt(mean((datatesthealth[[response_col]] - test_predictions)^2))
+  
+  resultspls[[response_col]] <- c(rmse_train,rmse_test)
+}
+print(resultspls)
+
+```
+Ridge
+
+```{r}
+set.seed(123)
+
+library(glmnet)
+
+resultsridge <- list()
+
+for (response_col in names(datahealth)) {
+  x <- as.matrix(datatraingrocery)
+  y <- as.vector(datatrainhealth[[response_col]])
+
+  cv_ridge <- cv.glmnet(x, y, alpha = 0, nfolds = 5)
+
+  ridge_model <- glmnet(x, y, alpha = 0, lambda = cv_ridge$lambda.min)
+
+  train_predictions <- predict(ridge_model, newx = as.matrix(datatraingrocery))
+
+  test_predictions <- predict(ridge_model, newx = as.matrix(datatestgrocery))
+    
+  rmse_train <- sqrt(mean((datatrainhealth[[response_col]] - train_predictions)^2))
+  rmse_test <- sqrt(mean((datatesthealth[[response_col]] - test_predictions)^2))
+  
+  resultsridge[[response_col]] <- c(rmse_train,rmse_test)
+}
+
+print(resultsridge)
+```
+Lasso
+
+```{r}
+set.seed(123)
+
+resultslasso <- list()
+
+for (response_col in names(datahealth)) {
+  x <- as.matrix(datatraingrocery)
+  y <- as.vector(datatrainhealth[[response_col]])
+
+  cv_lasso <- cv.glmnet(x, y, alpha = 1, nfolds = 5)
+
+  lasso_model <- glmnet(x, y, alpha = 1, lambda = cv_lasso$lambda.min)
+
+  train_predictions <- predict(lasso_model, newx = as.matrix(datatraingrocery))
+
+  test_predictions <- predict(lasso_model, newx = as.matrix(datatestgrocery))
+    
+  rmse_train <- sqrt(mean((datatrainhealth[[response_col]] - train_predictions)^2))
+  rmse_test <- sqrt(mean((datatesthealth[[response_col]] - test_predictions)^2))
+  
+  resultslasso[[response_col]] <- c(rmse_train,rmse_test)
+}
+
+print(resultslasso)
+```
