@@ -1,6 +1,6 @@
 # STOR 565 Project 
 
-**Full Paper can be found in the .docx file above**
+**Full Paper can be found in STOR 565 Final Project Paper.pdf above**
 
 In this project, we wanted to discover trends within grocery store density that could help
 us predict health outcomes as well as outline areas that could benefit from access to
