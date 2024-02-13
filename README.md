@@ -9,6 +9,8 @@ deserts, which we define as areas with low access to healthy foods. To do so, we
 machine learning techniques such as linear models, extreme gradient boosting, random
 forests, and tree-based methods to find a model with a root mean squared error of
 0.001782068 on the testing dataset.
+
+
 We explored data from the National Neighborhood Data Archive (NaNDA): Grocery Stores
 by County 2003-2017, created by the Social Science department at the University of
 Michigan. It includes counts of grocery, specialty, and warehouse stores, as well as number
